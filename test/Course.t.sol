@@ -7,6 +7,8 @@ import "../src/Course.sol";
 contract CourseTest is Test {
     Course course;
     address owner;
+    mapping(address => uint256) public startTimes;
+    mapping(address => uint256) public finishTimes;
 
     function setUp() public {
         course = new Course();
@@ -95,5 +97,30 @@ contract CourseTest is Test {
         vm.prank(owner);
         course.startCourse();
         course.markCheckpointCompleted(0, owner);
+    }
+
+    function test_StartCourse() public {
+        assertFalse(course.built());
+        course.addCheckpoint(123, 456);
+        course.addCheckpoint(654, 321);
+        course.build();
+        assertTrue(course.built());
+        course.startCourse();
+        assertEq(startTimes[msg.sender], block.timestamp - 1);
+    }
+
+    function test_FinishCourse() public {
+        course.addCheckpoint(123, 456);
+        course.addCheckpoint(654, 321);
+        course.build();
+        assertTrue(course.built());
+        vm.startPrank(owner);
+        course.startCourse();
+        startTimes[msg.sender] = block.timestamp;
+        course.markCheckpointCompleted(0, msg.sender);
+        course.markCheckpointCompleted(1, msg.sender);
+        finishTimes[msg.sender] = block.timestamp;
+        assertEq(finishTimes[msg.sender], block.timestamp);
+        vm.stopPrank();
     }
 }
