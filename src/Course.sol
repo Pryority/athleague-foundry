@@ -2,10 +2,10 @@
 pragma solidity ^0.8.19;
 
 contract Course {
-    address public owner;
-    bool public finalized;
-    mapping(uint256 => Checkpoint) public checkpoints;
-    uint256 public numCheckpoints;
+    struct Coord {
+        int256 lat;
+        int256 long;
+    }
 
     struct Checkpoint {
         Coord coord;
@@ -13,12 +13,12 @@ contract Course {
         bool completed;
     }
 
-    struct Coord {
-        uint256 lat;
-        uint256 long;
-    }
+    Checkpoint[] public checkpoints;
+    bool public built;
+    address owner;
 
-    event CheckpointCompleted(uint256, address);
+    mapping(address => uint256) public startTimes;
+    mapping(address => uint256) public finishTimes;
 
     constructor() {
         owner = msg.sender;
@@ -32,65 +32,101 @@ contract Course {
         _;
     }
 
-    modifier notFinalized() {
-        require(!finalized, "Course has already been finalized.");
+    modifier notBuilt() {
+        require(!built, "Course has already been built.");
         _;
     }
 
-    modifier courseFinalized() {
-        require(finalized, "Course has not yet been finalized.");
+    modifier isBuilt() {
+        require(built, "Course has not yet been built.");
         _;
     }
 
-    function addCheckpoint(
-        uint256 _lat,
-        uint256 _long
-    ) public onlyOwner notFinalized {
-        checkpoints[numCheckpoints] = Checkpoint(
-            Coord(_lat, _long),
-            numCheckpoints,
-            false
+    function addCheckpoint(int256 lat, int256 long) public onlyOwner {
+        require(!built, "Course has already been built.");
+        checkpoints.push(
+            Checkpoint({
+                coord: Coord({lat: lat, long: long}),
+                sequence: checkpoints.length,
+                completed: false
+            })
         );
-        numCheckpoints++;
     }
 
-    function removeCheckpoint(uint256 _sequence) public onlyOwner notFinalized {
-        require(_sequence < numCheckpoints, "Invalid sequence number.");
-        for (uint256 i = _sequence; i < numCheckpoints - 1; i++) {
-            checkpoints[i] = checkpoints[i + 1];
-        }
-        delete checkpoints[numCheckpoints - 1];
-        numCheckpoints--;
-    }
-
-    function finalizeCourse() public onlyOwner notFinalized {
-        require(numCheckpoints > 0, "At least one checkpoint must be added.");
-        finalized = true;
-    }
-
-    function getCheckpoints()
-        public
-        view
-        courseFinalized
-        returns (Checkpoint[] memory)
-    {
-        Checkpoint[] memory result = new Checkpoint[](numCheckpoints);
-        for (uint256 i = 0; i < numCheckpoints; i++) {
-            result[i] = checkpoints[i];
-        }
-        return result;
-    }
-
-    function markCheckpointCompleted(
-        uint256 checkpointId,
-        address cpOwner
-    ) public onlyOwner courseFinalized {
+    function removeCheckpoint(uint256 index) public onlyOwner {
+        require(!built, "Course has already been built.");
         require(
-            !checkpoints[checkpointId].completed,
-            "Checkpoint already completed"
+            checkpoints.length > 0,
+            "At least one checkpoint must be added."
+        );
+        require(index < checkpoints.length, "Index out of bounds.");
+        checkpoints[index] = checkpoints[checkpoints.length - 1];
+        checkpoints.pop();
+    }
+
+    function build() public onlyOwner {
+        require(!built, "Course has already been built.");
+        require(
+            checkpoints.length > 1,
+            "At least two checkpoints must be added."
+        );
+        built = true;
+    }
+
+    function getCheckpoints() public view returns (Checkpoint[] memory) {
+        return checkpoints;
+    }
+
+    function markCheckpointCompleted(uint256 index, address racer) public {
+        require(built, "Course has not been built.");
+        require(index < checkpoints.length, "Index out of bounds.");
+        require(
+            !checkpoints[index].completed,
+            "Checkpoint has already been completed."
+        );
+        require(racer != address(0), "Racer address cannot be null.");
+        require(
+            startTimes[racer] != 0,
+            "Racer has not started the course yet."
+        );
+        require(
+            checkpoints[index].sequence == 0 ||
+                checkpoints[index - 1].completed,
+            "Checkpoints must be completed in order."
         );
 
-        checkpoints[checkpointId].completed = true;
-        emit CheckpointCompleted(checkpointId, cpOwner);
+        checkpoints[index].completed = true;
+
+        if (index == checkpoints.length - 1) {
+            finishCourse(racer);
+        }
+    }
+
+    function startCourse() public {
+        require(built, "Course has not been built.");
+        require(
+            startTimes[msg.sender] == 0,
+            "Racer has already started the course."
+        );
+
+        startTimes[msg.sender] = block.timestamp;
+    }
+
+    function finishCourse(address racer) public {
+        require(built, "Course has not been built.");
+        require(
+            checkpoints[checkpoints.length - 1].completed,
+            "Course has not been completed."
+        );
+        require(
+            startTimes[racer] != 0,
+            "Racer has not started the course yet."
+        );
+        require(
+            finishTimes[racer] == 0,
+            "Racer has already finished the course."
+        );
+
+        finishTimes[racer] = block.timestamp;
     }
 }
