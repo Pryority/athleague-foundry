@@ -53,6 +53,27 @@ contract Course {
         );
     }
 
+    function addCheckpoints(
+        int256[] memory latitudes,
+        int256[] memory longitudes
+    ) public onlyOwner {
+        require(!built, "Course has already been built.");
+        require(
+            latitudes.length == longitudes.length,
+            "Number of latitudes must match number of longitudes."
+        );
+
+        for (uint256 i = 0; i < latitudes.length; i++) {
+            checkpoints.push(
+                Checkpoint({
+                    coord: Coord({lat: latitudes[i], long: longitudes[i]}),
+                    sequence: checkpoints.length,
+                    completed: false
+                })
+            );
+        }
+    }
+
     function removeCheckpoint(uint256 index) public onlyOwner {
         require(!built, "Course has already been built.");
         require(
