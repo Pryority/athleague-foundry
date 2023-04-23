@@ -18,8 +18,8 @@ contract CourseTest is Test {
         course.finalizeCourse();
         Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
         assertEq(checkpoints.length, 1);
-        assertEq(checkpoints[0].lat, 123);
-        assertEq(checkpoints[0].long, 456);
+        assertEq(checkpoints[0].coord.lat, 123);
+        assertEq(checkpoints[0].coord.long, 456);
         assertEq(checkpoints[0].sequence, 0);
     }
 
@@ -43,11 +43,11 @@ contract CourseTest is Test {
         course.finalizeCourse();
         Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
         assertEq(checkpoints.length, 2);
-        assertEq(checkpoints[0].lat, 123);
-        assertEq(checkpoints[0].long, 456);
+        assertEq(checkpoints[0].coord.lat, 123);
+        assertEq(checkpoints[0].coord.long, 456);
         assertEq(checkpoints[0].sequence, 0);
-        assertEq(checkpoints[1].lat, 789);
-        assertEq(checkpoints[1].long, 101112);
+        assertEq(checkpoints[1].coord.lat, 789);
+        assertEq(checkpoints[1].coord.long, 101112);
         assertEq(checkpoints[1].sequence, 1);
     }
 

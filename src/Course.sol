@@ -8,10 +8,14 @@ contract Course {
     uint256 public numCheckpoints;
 
     struct Checkpoint {
-        uint256 lat;
-        uint256 long;
+        Coord coord;
         uint256 sequence;
         bool completed;
+    }
+
+    struct Coord {
+        uint256 lat;
+        uint256 long;
     }
 
     event CheckpointCompleted(uint256, address);
@@ -43,8 +47,7 @@ contract Course {
         uint256 _long
     ) public onlyOwner notFinalized {
         checkpoints[numCheckpoints] = Checkpoint(
-            _lat,
-            _long,
+            Coord(_lat, _long),
             numCheckpoints,
             false
         );
