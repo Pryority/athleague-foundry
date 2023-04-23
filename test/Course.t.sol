@@ -83,4 +83,10 @@ contract CourseTest is Test {
         vm.expectRevert("Course has already been finalized.");
         course.addCheckpoint(789, 101112);
     }
+
+    function test_MarkCheckpointCompleted() public {
+        course.addCheckpoint(123, 456);
+        course.finalizeCourse();
+        course.markCheckpointCompleted(0, owner);
+    }
 }
