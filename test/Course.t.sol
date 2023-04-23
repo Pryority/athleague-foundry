@@ -15,6 +15,7 @@ contract CourseTest is Test {
 
     function test_AddCheckpoint() public {
         course.addCheckpoint(123, 456);
+        course.finalizeCourse();
         Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
         assertEq(checkpoints.length, 1);
         assertEq(checkpoints[0].lat, 123);
@@ -25,8 +26,8 @@ contract CourseTest is Test {
     function test_RemoveCheckpoint() public {
         course.addCheckpoint(123, 456);
         course.removeCheckpoint(0);
-        Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
-        assertEq(checkpoints.length, 0);
+        vm.expectRevert("At least one checkpoint must be added.");
+        course.finalizeCourse();
     }
 
     function test_FinalizeCourse() public {
@@ -39,6 +40,7 @@ contract CourseTest is Test {
     function test_GetCheckpoints() public {
         course.addCheckpoint(123, 456);
         course.addCheckpoint(789, 101112);
+        course.finalizeCourse();
         Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
         assertEq(checkpoints.length, 2);
         assertEq(checkpoints[0].lat, 123);

@@ -4,14 +4,17 @@ pragma solidity ^0.8.19;
 contract Course {
     address public owner;
     bool public finalized;
-    mapping(uint => Checkpoint) public checkpoints;
-    uint public numCheckpoints;
+    mapping(uint256 => Checkpoint) public checkpoints;
+    uint256 public numCheckpoints;
 
     struct Checkpoint {
-        uint lat;
-        uint long;
-        uint sequence;
+        uint256 lat;
+        uint256 long;
+        uint256 sequence;
+        bool completed;
     }
+
+    event CheckpointCompleted(uint256, address);
 
     constructor() {
         owner = msg.sender;
@@ -30,17 +33,27 @@ contract Course {
         _;
     }
 
+    modifier courseFinalized() {
+        require(finalized, "Course has not yet been finalized.");
+        _;
+    }
+
     function addCheckpoint(
-        uint _lat,
-        uint _long
+        uint256 _lat,
+        uint256 _long
     ) public onlyOwner notFinalized {
-        checkpoints[numCheckpoints] = Checkpoint(_lat, _long, numCheckpoints);
+        checkpoints[numCheckpoints] = Checkpoint(
+            _lat,
+            _long,
+            numCheckpoints,
+            false
+        );
         numCheckpoints++;
     }
 
-    function removeCheckpoint(uint _sequence) public onlyOwner notFinalized {
+    function removeCheckpoint(uint256 _sequence) public onlyOwner notFinalized {
         require(_sequence < numCheckpoints, "Invalid sequence number.");
-        for (uint i = _sequence; i < numCheckpoints - 1; i++) {
+        for (uint256 i = _sequence; i < numCheckpoints - 1; i++) {
             checkpoints[i] = checkpoints[i + 1];
         }
         delete checkpoints[numCheckpoints - 1];
@@ -52,11 +65,29 @@ contract Course {
         finalized = true;
     }
 
-    function getCheckpoints() public view returns (Checkpoint[] memory) {
+    function getCheckpoints()
+        public
+        view
+        courseFinalized
+        returns (Checkpoint[] memory)
+    {
         Checkpoint[] memory result = new Checkpoint[](numCheckpoints);
-        for (uint i = 0; i < numCheckpoints; i++) {
+        for (uint256 i = 0; i < numCheckpoints; i++) {
             result[i] = checkpoints[i];
         }
         return result;
+    }
+
+    function markCheckpointCompleted(
+        uint256 checkpointId,
+        address cpOwner
+    ) public onlyOwner courseFinalized {
+        require(
+            !checkpoints[checkpointId].completed,
+            "Checkpoint already completed"
+        );
+
+        checkpoints[checkpointId].completed = true;
+        emit CheckpointCompleted(checkpointId, cpOwner);
     }
 }
