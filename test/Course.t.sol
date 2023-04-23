@@ -26,6 +26,30 @@ contract CourseTest is Test {
         assertEq(checkpoints[0].sequence, 0);
     }
 
+    function test_AddCheckpoints() public {
+        int256[] memory latitudes = new int256[](3);
+        latitudes[0] = 123456;
+        latitudes[1] = 234567;
+        latitudes[2] = 345678;
+        int256[] memory longitudes = new int256[](3);
+        longitudes[0] = 987654;
+        longitudes[1] = 876543;
+        longitudes[2] = 765432;
+        course.addCheckpoints(latitudes, longitudes);
+        course.build();
+        Course.Checkpoint[] memory checkpoints = course.getCheckpoints();
+        assertEq(checkpoints.length, 3);
+        assertEq(checkpoints[0].coord.lat, latitudes[0]);
+        assertEq(checkpoints[0].coord.long, longitudes[0]);
+        assertEq(checkpoints[0].sequence, 0);
+        assertEq(checkpoints[1].coord.lat, latitudes[1]);
+        assertEq(checkpoints[1].coord.long, longitudes[1]);
+        assertEq(checkpoints[1].sequence, 1);
+        assertEq(checkpoints[2].coord.lat, latitudes[2]);
+        assertEq(checkpoints[2].coord.long, longitudes[2]);
+        assertEq(checkpoints[2].sequence, 2);
+    }
+
     function test_RemoveCheckpoint() public {
         course.addCheckpoint(123, 456);
         course.removeCheckpoint(0);
