@@ -1,4 +1,5 @@
-/*// SPDX-License-Identifier: MIT
+// test/Course.sol
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
 import "forge-std/Test.sol";
@@ -7,8 +8,8 @@ import "../src/Course.sol";
 contract CourseTest is Test {
     Course course;
     address owner;
-    mapping(address => uint256) public startTimes;
-    mapping(address => uint256) public finishTimes;
+    mapping(address => uint256) public cpStartTimes;
+    mapping(address => uint256) public cpFinishTimes;
 
     function setUp() public {
         course = new Course();
@@ -114,13 +115,44 @@ contract CourseTest is Test {
         course.addCheckpoint(789, 101112);
     }
 
+    // function test_MarkCheckpointCompleted() public {
+    //     course.addCheckpoint(123, 456);
+    //     course.addCheckpoint(654, 321);
+    //     course.build();
+    //     vm.prank(owner);
+    //     course.startCourse();
+    //     course.markCheckpointCompleted(0, owner);
+    // }
+
     function test_MarkCheckpointCompleted() public {
-        course.addCheckpoint(123, 456);
-        course.addCheckpoint(654, 321);
+        course.addCheckpoint(1, 1);
+        course.addCheckpoint(2, 2);
         course.build();
-        vm.prank(owner);
-        course.startCourse();
-        course.markCheckpointCompleted(0, owner);
+        bytes
+            memory privateKey = hex"ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80";
+        bytes32 signature = course.getMessageHash(
+            "I completed checkpoint",
+            1,
+            1,
+            1,
+            0
+        );
+        bytes memory sig = bytes(abi.encodePacked(signature));
+        course.markCheckpointCompleted(1, 1, 0, sig);
+        Course.Checkpoint memory firstCheckpoint = course.checkpoints(0);
+        assertEq(
+            firstCheckpoint.completed,
+            true,
+            "Checkpoint should be marked as completed."
+        );
+        signature = course.getMessageHash("I completed checkpoint", 2, 2, 2, 1);
+        course.markCheckpointCompleted(2, 2, 1, signature);
+        Course.Checkpoint memory secondCheckpoint = course.checkpoints(1);
+        assertEq(
+            secondCheckpoint,
+            true,
+            "Checkpoint should be marked as completed."
+        );
     }
 
     function test_StartCourse() public {
@@ -130,7 +162,7 @@ contract CourseTest is Test {
         course.build();
         assertTrue(course.built());
         course.startCourse();
-        assertEq(startTimes[msg.sender], block.timestamp - 1);
+        assertEq(cpStartTimes[msg.sender], block.timestamp - 1);
     }
 
     function test_FinishCourse() public {
@@ -140,11 +172,46 @@ contract CourseTest is Test {
         assertTrue(course.built());
         vm.startPrank(owner);
         course.startCourse();
-        startTimes[msg.sender] = block.timestamp;
+        cpStartTimes[msg.sender] = block.timestamp;
         course.markCheckpointCompleted(0, msg.sender);
         course.markCheckpointCompleted(1, msg.sender);
-        finishTimes[msg.sender] = block.timestamp;
-        assertEq(finishTimes[msg.sender], block.timestamp);
+        cpFinishTimes[msg.sender] = block.timestamp;
+        assertEq(cpFinishTimes[msg.sender], block.timestamp);
         vm.stopPrank();
     }
-}*/
+
+    event cpTimes(uint256[]);
+
+    function test_GetCheckpointTimes() public {
+        course.addCheckpoint(123, 456);
+        course.addCheckpoint(789, 101112);
+        course.build();
+        vm.startPrank(owner);
+        course.startCourse();
+        cpStartTimes[msg.sender] = block.timestamp;
+        course.markCheckpointCompleted(0, msg.sender);
+        course.markCheckpointCompleted(1, msg.sender);
+        cpFinishTimes[msg.sender] = block.timestamp;
+        uint256[] memory checkpointTimes = course.getCheckpointTimes(
+            msg.sender
+        );
+
+        emit cpTimes(checkpointTimes);
+        uint256 bt = block.timestamp;
+        assertEq(bt, cpStartTimes[msg.sender]);
+        assertEq(checkpointTimes.length, 2);
+        // assertEq(checkpointTimes[0], cpStartTimes[msg.sender] + 1);
+        // assertEq(checkpointTimes[1], cpFinishTimes[msg.sender]);
+    }
+
+    // function test_GetTotalTime() public {
+    //     course.addCheckpoint(123, 456);
+    //     course.addCheckpoint(654, 321);
+    //     course.build();
+    //     course.startCourse();
+    //     cpStartTimes[msg.sender] = block.timestamp - 3600;
+    //     cpFinishTimes[msg.sender] = cpStartTimes[msg.sender] + 1800;
+    //     uint256 totalTime = course.getTotalTime(msg.sender);
+    //     assertEq(totalTime, 1800);
+    // }
+}
