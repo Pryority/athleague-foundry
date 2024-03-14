@@ -30,6 +30,10 @@ contract Course is ICourse, NoDelegateCall {
         _;
     }*/
 
+    function getCheckpoints() public view returns (address[] memory) {
+        return checkpoints;
+    }
+
     /*
     function markCheckpointCompleted(Info storage info, address player, uint256 index) internal {
         require(index < info.numCheckpoints, "Index out of bounds");

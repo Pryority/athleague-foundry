@@ -2,12 +2,13 @@
 pragma solidity ^0.8.19;
 
 import "./course/ICourseImmutables.sol";
+import "./course/ICourseState.sol";
 
 /// @title The interface for a Uniswap V3 Pool
 /// @notice A Uniswap pool facilitates swapping and automated market making between any two assets that strictly conform
 /// to the ERC20 specification
 /// @dev The pool interface is broken up into many smaller pieces
-interface ICourse is ICourseImmutables {}
+interface ICourse is ICourseImmutables, ICourseState {}
 /*IUniswapV3PoolState,
     IUniswapV3PoolDerivedState,
     IUniswapV3PoolActions,
