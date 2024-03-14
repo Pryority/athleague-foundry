@@ -3,7 +3,7 @@ pragma solidity ^0.8.19;
 
 import "./Checkpoint.sol";
 import "./interfaces/ICourse.sol";
-import './interfaces/ICourseDeployer.sol';
+import "./interfaces/ICourseDeployer.sol";
 
 contract Course is ICourse, NoDelegateCall {
     /*using Checkpoint for Checkpoint.Info;*/
@@ -14,15 +14,22 @@ contract Course is ICourse, NoDelegateCall {
     }
 
     address public immutable override factory;
-    address public immutable override checkpoint0;
+    address[] public checkpoints;
     uint8 public immutable override gameMode;
 
     /*mapping(address => uint256) public startTimes;
     mapping(address => uint256) public finishTimes;*/
 
-    constructor() {
-        (factory, checkpoint0, gameMode) = ICourseDeployer(msg.sender).parameters();
+    constructor(address[] memory _checkpoints) {
+        (factory, gameMode) = ICourseDeployer(msg.sender).parameters();
+        require(_checkpoints.length > 0, "At least one checkpoint is required");
+        checkpoints = _checkpoints;
     }
+    /*modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can perform this operation.");
+        _;
+    }*/
+
     /*
     function markCheckpointCompleted(Info storage info, address player, uint256 index) internal {
         require(index < info.numCheckpoints, "Index out of bounds");
@@ -37,10 +44,6 @@ contract Course is ICourse, NoDelegateCall {
         return info.checkpointsCompleted[player][index];
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the owner can perform this operation.");
-        _;
-    }
 
     modifier isBuilt() {
         require(built, "Course has not yet been built.");
@@ -57,8 +60,8 @@ contract Course is ICourse, NoDelegateCall {
     function createRaceCommitment(address player, uint256 rand) public pure returns (bytes32) {
         return keccak256(abi.encode(player, rand));
     }
-
-    function addCheckpoint(int256 lat, int256 long) public onlyOwner {
+    */
+    /*function addCheckpoint(int256 lat, int256 long) public onlyOwner {
         checkpoints.push(
             Checkpoint({coord: Coord({lat: lat, long: long}), sequence: checkpoints.length, completed: false})
         );
@@ -92,7 +95,9 @@ contract Course is ICourse, NoDelegateCall {
 
     function getCheckpoints() public view returns (Checkpoint[] memory) {
         return checkpoints;
-    }
+    }*/
+
+    /*
 
     function markCheckpointCompleted(uint256 index, address racer) public {
         require(index < checkpoints.length, "Index out of bounds.");

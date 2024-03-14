@@ -32,12 +32,12 @@ interface ICourseFactory {
     function getCourse(address checkpoint, uint8 gameMode) external view returns (address course);
 
     /// @notice Creates a course for the given checkpoint
-    /// @param checkpoint The address of the first checkpoint of the course
+    /// @param checkpoints The address of the first checkpoint of the course
     /// @param gameMode The game mode for the course
     /// from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
     /// are invalid.
     /// @return course The address of the newly created course
-    function createCourse(address checkpoint, uint8 gameMode) external returns (address course);
+    function createCourse(address[] memory checkpoints, uint8 gameMode) external returns (address course);
 
     /// @notice Updates the owner of the factory
     /// @dev Must be called by the current owner

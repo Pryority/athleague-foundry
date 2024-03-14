@@ -10,7 +10,7 @@ interface ICourseImmutables {
 
     /// @notice A description of the course and its features
     /// @return The description in bytes format
-    function checkpoint0() external view returns (address);
+    /*function checkpoints() external view returns (address[] memory);*/
 
     /// @notice The game mode of the course
     /// @return uint8 which can be mapped to game mode title
