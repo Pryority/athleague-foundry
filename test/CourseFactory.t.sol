@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../src/CourseFactory.sol";
 import "../src/CheckpointFactory.sol";
 import "../src/interfaces/ICourseFactory.sol";
+import "../src/Course.sol";
 import "../src/interfaces/ICheckpointFactory.sol";
 
 contract CourseFactoryTest is Test {
@@ -26,7 +27,10 @@ contract CourseFactoryTest is Test {
         checkpoints[0] = checkpoint1;
         checkpoints[1] = checkpoint2;
 
-        courseFactory.createCourse(checkpoints, 0);
+        Course course = Course(courseFactory.createCourse(checkpoints, 0));
         vm.stopPrank();
+
+        address[] memory courseCheckpoints = course.getCheckpoints();
+        assertEq(2, courseCheckpoints.length);
     }
 }
