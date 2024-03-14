@@ -26,18 +26,18 @@ interface ICourseFactory {
 
     /// @notice Returns the course address for a given start checkpoint and game mode, or address 0 if it does not exist
     /// @dev startCheckpoint and tokenB may be passed in either token0/token1 or token1/token0 order
-    /// @param checkpoint0 The contract address of either token0 or token1
+    /// @param checkpoint The contract address of a checkpoint belonging to the course
     /// @param gameMode The game mode for the course
     /// @return course The course address
-    function getCourse(address checkpoint0, uint8 gameMode) external view returns (address course);
+    function getCourse(address checkpoint, uint8 gameMode) external view returns (address course);
 
     /// @notice Creates a course for the given checkpoint
-    /// @param checkpoint0 The address of the first checkpoint of the course
+    /// @param checkpoint The address of the first checkpoint of the course
     /// @param gameMode The game mode for the course
     /// from the fee. The call will revert if the pool already exists, the fee is invalid, or the token arguments
     /// are invalid.
     /// @return course The address of the newly created course
-    function createCourse(address checkpoint0, uint8 gameMode) external returns (address course);
+    function createCourse(address checkpoint, uint8 gameMode) external returns (address course);
 
     /// @notice Updates the owner of the factory
     /// @dev Must be called by the current owner
