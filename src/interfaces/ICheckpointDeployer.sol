@@ -10,5 +10,5 @@ interface ICheckpointDeployer {
     /// @dev Called by the course constructor to fetch the parameters of the pool
     /// Returns factory The factory address
     /// Returns description The description of the features of the course
-    function parameters() external view returns (address course, int64 latitude, int64 longitude);
+    function parameters() external view returns (int64 latitude, int64 longitude);
 }
