@@ -1,38 +1,72 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.24;
 
-import "./Checkpoint.sol";
-import "./interfaces/ICourse.sol";
-import "./interfaces/ICourseDeployer.sol";
+import {CoordinateMath} from "./CoordinateMath.sol";
+import {Checkpoint} from "./Checkpoint.sol";
 
-contract Course is ICourse, NoDelegateCall {
-    /*using Checkpoint for Checkpoint.Info;*/
+library Course {
+    // this is not used but needs to be
+    /*using TryBitmap for mapping(int8 => uint256);*/
+    using Checkpoint for mapping(bytes32 => Checkpoint.Info);
+    using Checkpoint for Checkpoint.Info;
+    using Course for State;
 
-    struct Info {
-        mapping(address => mapping(uint256 => bool)) checkpointsCompleted;
-        uint256 numCheckpoints;
+    struct Slot0 {
+        int32 startLat;
+        int32 startLng;
+        uint256 completions;
+        address leader;
     }
 
-    address public immutable override factory;
-    address[] public checkpoints;
-    uint8 public immutable override gameMode;
-
-    /*mapping(address => uint256) public startTimes;
-    mapping(address => uint256) public finishTimes;*/
-
-    constructor(address[] memory _checkpoints) {
-        (factory, gameMode) = ICourseDeployer(msg.sender).parameters();
-        require(_checkpoints.length > 0, "At least one checkpoint is required");
-        checkpoints = _checkpoints;
+    struct TryInfo {
+        // the number of checkpoints completed
+        uint8 completedCount;
+        // the address of the player trying the course
+        address player;
+        // time counting seconds elapsed since the course try start
+        uint256 elapsedTime;
     }
-    /*modifier onlyOwner() {
-        require(msg.sender == owner, "Only the owner can perform this operation.");
-        _;
+
+    struct State {
+        Slot0 slot0;
+        mapping(int8 index => TryInfo tryInfo) tries;
+        mapping(int8 => Checkpoint.Info) checkpoints;
+        /*With int8, you have 128 possible values, ranging from -128 to 127, which effectively allows for 128 checkpoints if you only consider positive indices.*/
+        /*With uint8, you have 256 possible values, ranging from 0 to 255, which allows for 256 checkpoints.*/
+        mapping(int8 => uint256) tryBitmap;
+    }
+
+    // Initialize the course state
+    function initialize(State storage self, int32 startLat, int32 startLng) internal {
+        // Set the initial values for the course slot
+        self.slot0 = Slot0({
+            startLat: startLat,
+            startLng: startLng,
+            completions: 0,
+            leader: address(0)
+        });
+    }
+
+    // Add a checkpoint to the course
+    /*function addCheckpoint(State storage self, int8 index, int32 lat, int32 lng) internal {
+        // Create a new checkpoint with the provided index, latitude, and longitude
+        self.checkpoints[index] = Checkpoint.Info({latitude: lat, longitude: lng});
     }*/
 
-    function getCheckpoints() public view returns (address[] memory) {
+    // Mark a checkpoint as completed
+    /*function markCheckpointCompleted(State storage self, address player, int8 index) internal {
+        // Ensure the checkpoint index is valid
+        require(index >= 0 && index < 128, "Invalid checkpoint index");
+
+        // Update the try information for the player
+        self.tries[index].completedCount++;
+        self.tries[index].player = player;
+        // Update the try bitmap to mark the try as completed
+        self.tryBitmap[index] |= (1 << uint8(index));
+    }*/
+    /*function getCheckpoints() public view returns (address[] memory) {
         return checkpoints;
-    }
+    }*/
 
     /*
     function markCheckpointCompleted(Info storage info, address player, uint256 index) internal {
